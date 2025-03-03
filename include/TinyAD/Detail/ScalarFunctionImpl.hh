@@ -156,6 +156,25 @@ eval(
 }
 
 template <int variable_dimension, typename PassiveT, typename VariableHandleT>
+Eigen::VectorX<PassiveT>
+ScalarFunction<variable_dimension, PassiveT, VariableHandleT>::
+eval_per_element(
+        const Eigen::VectorX<PassiveT>& _x,
+        const int nelement) const
+{
+    TINYAD_ASSERT_EQ(_x.size(), n_vars);
+
+    Eigen::VectorX<PassiveT> fs = Eigen::VectorX<PassiveT>::Zero(nelement);
+    for (auto& objective : objective_terms)
+    {
+        fs += objective->eval_per_element(_x);
+    }
+
+    return fs;
+}
+
+
+template <int variable_dimension, typename PassiveT, typename VariableHandleT>
 PassiveT
 ScalarFunction<variable_dimension, PassiveT, VariableHandleT>::
 operator()(

@@ -30,6 +30,9 @@ struct ScalarObjectiveTermBase
     virtual PassiveT eval(
             const Eigen::VectorX<PassiveT>& _x) const = 0;
 
+    virtual Eigen::VectorX<PassiveT> eval_per_element(
+        const Eigen::VectorX<PassiveT>& _x) const = 0;
+            
     virtual void eval_with_gradient_add(
             const Eigen::VectorX<PassiveT>& _x,
             PassiveT& _f,
@@ -116,6 +119,25 @@ struct ScalarObjectiveTerm : ScalarObjectiveTermBase<PassiveT>
             f += element_results[i_element];
 
         return f;
+    }
+    
+    Eigen::VectorX<PassiveT> eval_per_element(
+            const Eigen::VectorX<PassiveT>& _x) const override
+    {
+        TINYAD_ASSERT_EQ(_x.size(), n_vars_global);
+
+        // Eval elements using plain double type
+        Eigen::VectorX<PassiveT> element_results(element_handles.size());
+
+        #pragma omp parallel for schedule(static) num_threads(get_n_threads(settings))
+        for (Eigen::Index i_element = 0; i_element < (Eigen::Index)element_handles.size(); ++i_element)
+        {
+            // Call user code
+            PassiveElementType element(element_handles[i_element], _x);
+            element_results(i_element) = eval_element_passive(element);
+        }
+
+        return element_results;
     }
 
     void eval_with_gradient_add(

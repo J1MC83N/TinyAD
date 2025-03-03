@@ -104,6 +104,13 @@ struct ScalarFunction
             const Eigen::VectorX<PassiveT>& _x) const;
 
     /**
+     * Evaluate function on each element, assumes each scalar objective term has the same number of elements.
+     */
+    Eigen::VectorX<PassiveT> eval_per_element(
+            const Eigen::VectorX<PassiveT>& _x,
+            const int nelement) const;
+
+    /**
      * Evaluate function without computing derivatives.
      */
     PassiveT operator()(
